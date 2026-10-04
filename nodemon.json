@@ -1,0 +1,11 @@
+{
+  "watch": [
+    "src",
+    ".env"
+  ],
+  "ext": "ts,json",
+  "exec": "tsx src/index.ts",
+  "env": {
+    "UV_THREADPOOL_SIZE": "16"
+  }
+}

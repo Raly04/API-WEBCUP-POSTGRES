@@ -1,0 +1,38 @@
+# Configuration de déploiement Render ( blueprints ).
+# Deux réglages à vérifier dans le dashboard Render, parce que ce fichier ne s'applique
+# qu'aux services créés à partir de lui :
+#   - Root Directory : Vide (ou "."). Mis sur "src", Render cherche src/dist/index.js
+#     alors que tsc produit dist/index.js à la racine du dépôt (tsconfig.json : rootDir src,
+#     outDir dist).
+#   - Build Command : `npm install && npm run build`. Sinon tsc n'est jamais exécuté et
+#     /dist étant dans .gitignore, le dossier n'est jamais transmis : le démarrage échoue
+#     sur « Cannot find module …/dist/index.js ».
+
+services:
+  - type: web
+    name: api-webcup
+    runtime: node
+    plan: starter
+    # Racine du dépôt : c'est ici que vivent package.json et tsconfig.json.
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    # dist/ n'est pas versionné, le build le régénère à chaque déploiement.
+    autoDeploy: true
+    healthCheckPath: /api/public/services
+    envVars:
+      - key: NODE_VERSION
+        value: "24.21.0"
+      # Connexion à la base. DATABASE_URL est prioritaire dans src/config/database.ts ;
+      # les DB_* ne servent que de repli si elle est absente.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: api-webcup-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      # À renseigner dans le dashboard (valeurs sensibles, jamais versionnées).
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
